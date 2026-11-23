@@ -1,0 +1,9 @@
+target/
+*.log
+*.lck
+*.tmp
+journal.xlsx
+results.xlsx
+dependency-reduced-pom.xml
+.idea/
+*.iml
