@@ -25,6 +25,8 @@ public final class Main {
     private static final Path STUDENTS_FILE = Path.of("students.xlsx");
     private static final Path TICKETS_FILE = Path.of("tickets.docx");
     private static final Path RESULTS_FILE = Path.of("results.xlsx");
+    /** Журнал консольного режима (Лаб 1). */
+    private static final Path CONSOLE_JOURNAL_FILE = Path.of("journal.xlsx");
 
     private Main() {
     }
@@ -32,7 +34,7 @@ public final class Main {
     public static void main(String[] args) throws IOException {
         AppLog.init();
         if (List.of(args).contains("--console")) {
-            ConsoleApp.run();
+            ConsoleApp.run(CONSOLE_JOURNAL_FILE);
         } else if (GraphicsEnvironment.isHeadless()) {
             System.err.println("Графическое окружение недоступно. Консольный режим: java -jar ticket-generator.jar --console");
         } else {

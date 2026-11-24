@@ -23,10 +23,13 @@ public final class ConsoleApp {
         this.clock = clock;
     }
 
-    /** Собирает настоящие зависимости (терминал, journal.xlsx) и запускает режим. */
-    public static void run() throws IOException {
+    /**
+     * Запускает режим с настоящим терминалом. Какой файл журнала использовать, решает вызывающий ({@code Main}):
+     * все пути к файлам приложения заданы в одном месте.
+     */
+    public static void run(Path journalFile) throws IOException {
         try (ConsoleInput input = new ConsoleInput()) {
-            new ConsoleApp(input, new Journal(Path.of("journal.xlsx")), new Random(), Clock.systemDefaultZone()).loop();
+            new ConsoleApp(input, new Journal(journalFile), new Random(), Clock.systemDefaultZone()).loop();
         }
     }
 

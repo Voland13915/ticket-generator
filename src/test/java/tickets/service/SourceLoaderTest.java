@@ -2,7 +2,7 @@ package tickets.service;
 
 import org.junit.jupiter.api.Test;
 import tickets.io.StudentsSource;
-import tickets.io.TicketsParser;
+import tickets.io.ParsedTickets;
 import tickets.io.TicketsSource;
 import tickets.model.Student;
 import tickets.model.Ticket;
@@ -17,8 +17,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /** Загрузчик проверяется на подставных источниках: Excel и Word для этого не нужны. */
 class SourceLoaderTest {
     private static final Map<String, List<Student>> GROUPS = Map.of("TI-237", List.of(new Student("TI-237", "Иванов", "Иван")));
-    private static final TicketsParser.Result ONE_TICKET =
-            new TicketsParser.Result(List.of(new Ticket(1, List.of("a", "b", "c"))), List.of("билет 2 пропущен"));
+    private static final ParsedTickets ONE_TICKET =
+            new ParsedTickets(List.of(new Ticket(1, List.of("a", "b", "c"))), List.of("билет 2 пропущен"));
 
     private record FakeStudents(String name, Map<String, List<Student>> groups, IOException error) implements StudentsSource {
         @Override
@@ -28,9 +28,9 @@ class SourceLoaderTest {
         }
     }
 
-    private record FakeTickets(String name, TicketsParser.Result result, IOException error) implements TicketsSource {
+    private record FakeTickets(String name, ParsedTickets result, IOException error) implements TicketsSource {
         @Override
-        public TicketsParser.Result read() throws IOException {
+        public ParsedTickets read() throws IOException {
             if (error != null) throw error;
             return result;
         }
@@ -78,7 +78,7 @@ class SourceLoaderTest {
     @Test
     void errorIfNoValidTicketsLeft() {
         LoadResult result = new SourceLoader(goodStudents(),
-                new FakeTickets("tickets.docx", new TicketsParser.Result(List.of(), List.of("билет 1 пропущен")), null)).load();
+                new FakeTickets("tickets.docx", new ParsedTickets(List.of(), List.of("билет 1 пропущен")), null)).load();
 
         assertFalse(result.ok());
         assertEquals(List.of("В файле tickets.docx не найдено ни одного корректного билета."), result.errors());

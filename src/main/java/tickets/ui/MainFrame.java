@@ -15,7 +15,7 @@ import java.util.Optional;
 public final class MainFrame extends JFrame {
     private final TicketsController controller;
     private final String journalName;
-    private final MainView view = new MainView();
+    private final MainView view;
     private List<String> warnings = List.of();
 
     /** @param journalName имя файла журнала — только для сообщений пользователю */
@@ -23,6 +23,8 @@ public final class MainFrame extends JFrame {
         super("Генератор экзаменационных билетов");
         this.controller = controller;
         this.journalName = journalName;
+        this.view = new MainView(journalName);
+        setIconImages(Icons.appImages());
 
         view.onRefresh(this::reload);
         view.onToggleTheme(this::toggleTheme);
@@ -35,8 +37,8 @@ public final class MainFrame extends JFrame {
         Keys.bind(getRootPane(), KeyEvent.VK_F5, this::reload);
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(1060, 700);
-        setMinimumSize(new Dimension(900, 640));
+        setSize(1120, 720);
+        setMinimumSize(new Dimension(940, 640));
         setLocationRelativeTo(null);
         reload();
     }
@@ -57,14 +59,14 @@ public final class MainFrame extends JFrame {
             Optional<Assignment> result =
                     controller.generate(student, error -> Dialogs.confirmRetry(this, journalName, error));
             if (result.isEmpty()) {
-                view.setStatus("Сохранение отменено, билет не выдан.");
+                view.setStatus("Сохранение отменено, билет не выдан.", StatusBar.Tone.WARNING);
                 return;
             }
             Assignment assignment = result.get();
             view.addRecord(assignment.record());
             view.setStatus("Билет № " + assignment.ticket().number()
                     + (assignment.record().repeat() ? " выдан повторно: " : " выдан: ")
-                    + student.displayName() + ", " + student.group() + ".");
+                    + student.displayName() + ", " + student.group() + ".", StatusBar.Tone.OK);
 
             new ResultDialog(this, student, assignment).setVisible(true);
             view.selection.resetStudent();

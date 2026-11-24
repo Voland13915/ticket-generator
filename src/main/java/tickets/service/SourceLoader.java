@@ -1,7 +1,7 @@
 package tickets.service;
 
 import tickets.io.StudentsSource;
-import tickets.io.TicketsParser;
+import tickets.io.ParsedTickets;
 import tickets.io.TicketsSource;
 import tickets.model.Student;
 import tickets.model.Ticket;
@@ -46,7 +46,7 @@ public final class SourceLoader implements CatalogSource {
 
     private List<Ticket> readTickets(List<String> errors, List<String> warnings) {
         try {
-            TicketsParser.Result parsed = ticketsSource.read();
+            ParsedTickets parsed = ticketsSource.read();
             warnings.addAll(parsed.warnings());
             if (parsed.tickets().isEmpty()) {
                 errors.add("В файле " + ticketsSource.name() + " не найдено ни одного корректного билета.");

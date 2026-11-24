@@ -7,5 +7,5 @@ public interface TicketsSource {
 
     String name();
 
-    TicketsParser.Result read() throws IOException;
+    ParsedTickets read() throws IOException;
 }
