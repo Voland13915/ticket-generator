@@ -109,8 +109,8 @@ class ConsoleAppTest {
     void entryHasCurrentTimeWithoutFraction() throws IOException {
         run(new ScriptedPrompt().fields("Migov", "Daniil"));
 
-        assertEquals(java.time.LocalDateTime.ofInstant(Instant.parse("2026-09-30T08:24:38Z"), ZoneOffset.systemDefault()),
-                log.entries.get(0).dateTime());
+        // часы теста зафиксированы в UTC, поэтому ожидаемое время не зависит от часового пояса компьютера
+        assertEquals(java.time.LocalDateTime.of(2026, 9, 30, 8, 24, 38), log.entries.get(0).dateTime());
     }
 
     @Test

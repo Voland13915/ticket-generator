@@ -23,7 +23,7 @@ public final class DocxTicketsSource implements TicketsSource {
     }
 
     @Override
-    public TicketsParser.Result read() throws IOException {
+    public ParsedTickets read() throws IOException {
         try (InputStream in = Files.newInputStream(file); XWPFDocument doc = new XWPFDocument(in)) {
             List<TicketsParser.Paragraph> paragraphs = doc.getParagraphs().stream()
                     .map(p -> new TicketsParser.Paragraph(p.getText(), isNumbered(p)))

@@ -31,17 +31,14 @@ public final class TicketsParser {
     public record Paragraph(String text, boolean numbered) {
     }
 
-    public record Result(List<Ticket> tickets, List<String> warnings) {
-    }
-
     private TicketsParser() {
     }
 
-    public static Result parse(List<Paragraph> paragraphs) {
+    public static ParsedTickets parse(List<Paragraph> paragraphs) {
         Parser parser = new Parser();
         paragraphs.forEach(parser::feed);
         parser.closeTicket();
-        return new Result(List.copyOf(parser.tickets), List.copyOf(parser.warnings));
+        return new ParsedTickets(parser.tickets, parser.warnings);
     }
 
     private static final class Parser {

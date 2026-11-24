@@ -25,12 +25,23 @@ public final class Theme {
             Map.entry("Button.arc", "8"),
             Map.entry("TextComponent.arc", "8"),
             Map.entry("ScrollPane.smoothScrolling", "true"),
-            Map.entry("Table.rowHeight", "32"),
-            Map.entry("Table.showHorizontalLines", "true"),
-            Map.entry("Table.gridColor", "$Tickets.line"),
-            Map.entry("TableHeader.height", "32"),
-            Map.entry("TableHeader.separatorColor", "$TableHeader.background"),
+            Map.entry("Table.rowHeight", "36"),
+            Map.entry("Table.showHorizontalLines", "false"),
+            Map.entry("Table.showVerticalLines", "false"),
+            Map.entry("Table.intercellSpacing", "0,0"),
+            Map.entry("Table.background", "$Tickets.paper"),
+            Map.entry("Table.selectionBackground", "$Tickets.selection"),
+            Map.entry("Table.selectionForeground", "$Table.foreground"),
+            Map.entry("Table.selectionInactiveBackground", "$Tickets.selection"),
+            Map.entry("Table.selectionInactiveForeground", "$Table.foreground"),
+            Map.entry("Table.cellFocusColor", "$Tickets.selection"),
+            Map.entry("TableHeader.height", "36"),
+            Map.entry("TableHeader.background", "$Tickets.paper"),
+            Map.entry("TableHeader.foreground", "$Tickets.muted"),
+            Map.entry("TableHeader.separatorColor", "$Tickets.paper"),
             Map.entry("TableHeader.bottomSeparatorColor", "$Tickets.line"),
+            Map.entry("ComboBox.padding", "4,8,4,8"),
+            Map.entry("ToolTip.border", "6,10,6,10"),
             Map.entry("TitlePane.unifiedBackground", "true"),
             Map.entry("[style]Button.primary", "font: +1 $semibold.font; borderWidth: 0; default.borderWidth: 0;"
                     + " background: $Tickets.primary; foreground: $Tickets.onPrimary;"
@@ -39,7 +50,16 @@ public final class Theme {
                     + " default.foreground: $Tickets.onPrimary; default.hoverBackground: $Tickets.primaryHover;"
                     + " default.pressedBackground: $Tickets.primaryPressed; default.focusedBackground: $Tickets.primary;"
                     + " disabledBackground: $Tickets.disabledFill; disabledText: $Tickets.disabledText"),
+            Map.entry("[style]Button.chip", "arc: 999; borderWidth: 0; focusWidth: 0; innerFocusWidth: 0;"
+                    + " margin: 4,12,4,12; iconTextGap: 6; font: $semibold.font;"
+                    + " background: $Tickets.repeatBackground; foreground: $Tickets.repeatText;"
+                    + " hoverBackground: $Tickets.warnHover; pressedBackground: $Tickets.warnHover"),
+            Map.entry("[style]Button.quiet", "arc: 10; borderWidth: 0; focusWidth: 0; innerFocusWidth: 0;"
+                    + " margin: 5,10,5,10; iconTextGap: 7; background: $Tickets.background;"
+                    + " hoverBackground: $Tickets.hover; pressedBackground: $Tickets.line"),
             Map.entry("[style].muted", "foreground: $Tickets.muted"),
+            Map.entry("[style].onPrimary", "foreground: $Tickets.onPrimary"),
+            Map.entry("[style].onPrimaryMuted", "foreground: $Tickets.onPrimaryMuted"),
             Map.entry("[style].ink", "foreground: $Tickets.ink"),
             Map.entry("[style].errorText", "foreground: $Tickets.errorText"));
 
@@ -62,7 +82,16 @@ public final class Theme {
             Map.entry("Tickets.errorBackground", "#FBECEC"),
             Map.entry("Tickets.errorBorder", "#E3A6A6"),
             Map.entry("Tickets.errorText", "#8E1C1C"),
-            Map.entry("Tickets.stamp", "#B32432"));
+            Map.entry("Tickets.stamp", "#B32432"),
+            Map.entry("Tickets.background", "#F4F6F9"),
+            Map.entry("Tickets.hover", "#E3E8EF"),
+            Map.entry("Tickets.selection", "#DCE8F5"),
+            Map.entry("Tickets.stripe", "#F7F9FB"),
+            Map.entry("Tickets.badge", "#E6EEF7"),
+            Map.entry("Tickets.warnHover", "#F6DDA8"),
+            Map.entry("Tickets.success", "#2E8B57"),
+            Map.entry("Tickets.shadow", "#1F3A5A"),
+            Map.entry("Tickets.onPrimaryMuted", "#B9CDE3"));
 
     private static final Map<String, String> DARK = Map.ofEntries(
             Map.entry("@background", "#23272E"),
@@ -83,7 +112,16 @@ public final class Theme {
             Map.entry("Tickets.errorBackground", "#472A2E"),
             Map.entry("Tickets.errorBorder", "#7E3D45"),
             Map.entry("Tickets.errorText", "#F5BCC1"),
-            Map.entry("Tickets.stamp", "#EF7C86"));
+            Map.entry("Tickets.stamp", "#EF7C86"),
+            Map.entry("Tickets.background", "#23272E"),
+            Map.entry("Tickets.hover", "#2F353E"),
+            Map.entry("Tickets.selection", "#33465F"),
+            Map.entry("Tickets.stripe", "#30363F"),
+            Map.entry("Tickets.badge", "#36465C"),
+            Map.entry("Tickets.warnHover", "#5E4B27"),
+            Map.entry("Tickets.success", "#6CC08F"),
+            Map.entry("Tickets.shadow", "#000000"),
+            Map.entry("Tickets.onPrimaryMuted", "#C7D7EF"));
 
     private Theme() {
     }

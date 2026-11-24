@@ -13,20 +13,32 @@ final class MainView extends JPanel {
     final SelectionPanel selection = new SelectionPanel();
     private final JournalPanel journal = new JournalPanel();
     private final ErrorBanner banner = new ErrorBanner();
+    private final StatusBar status;
     private final JLabel subtitle = new JLabel(" ");
-    private final JLabel status = new JLabel(" ");
-    private final JButton warningsButton = toolButton();
-    private final JButton refreshButton = toolButton();
-    private final JButton themeButton = toolButton();
+    private final JButton warningsButton = new JButton();
+    private final JButton refreshButton = new JButton("Обновить");
+    private final JButton themeButton = new JButton();
 
-    MainView() {
+    /** @param journalName имя файла журнала — показывается в строке состояния */
+    MainView(String journalName) {
         super(new BorderLayout());
-        refreshButton.setText("Обновить данные");
-        refreshButton.setToolTipText("Перечитать students.xlsx и tickets.docx (F5)");
-        warningsButton.putClientProperty(FlatClientProperties.STYLE_CLASS, "errorText");
+        status = new StatusBar(journalName);
+
+        warningsButton.putClientProperty(FlatClientProperties.STYLE_CLASS, "chip");
+        warningsButton.setIcon(Icons.of(Icons.Kind.WARNING, 14, "repeatText"));
         warningsButton.setToolTipText("Билеты, пропущенные при чтении tickets.docx");
         warningsButton.setVisible(false);
-        status.putClientProperty(FlatClientProperties.STYLE_CLASS, new String[]{"small", "muted"});
+
+        refreshButton.putClientProperty(FlatClientProperties.STYLE_CLASS, "quiet");
+        refreshButton.setIcon(Icons.of(Icons.Kind.REFRESH, 16, "ink"));
+        refreshButton.setToolTipText("Перечитать students.xlsx и tickets.docx (F5)");
+
+        themeButton.putClientProperty(FlatClientProperties.STYLE_CLASS, "quiet");
+
+        // кнопки шапки работают мышью и горячими клавишами; фокус им не нужен, иначе на старте вокруг первой рамка
+        for (JButton button : new JButton[]{warningsButton, refreshButton, themeButton}) {
+            button.setFocusable(false);
+        }
 
         JPanel body = new JPanel(new BorderLayout());
         body.setOpaque(false);
@@ -36,7 +48,7 @@ final class MainView extends JPanel {
 
         add(header(), BorderLayout.NORTH);
         add(body, BorderLayout.CENTER);
-        add(statusBar(), BorderLayout.SOUTH);
+        add(status, BorderLayout.SOUTH);
     }
 
     void onRefresh(Runnable action) {
@@ -53,14 +65,15 @@ final class MainView extends JPanel {
     }
 
     void setDarkTheme(boolean dark) {
-        themeButton.setText(dark ? "Светлая тема" : "Тёмная тема");
+        themeButton.setIcon(Icons.of(dark ? Icons.Kind.SUN : Icons.Kind.MOON, 16, "ink"));
+        themeButton.setToolTipText(dark ? "Светлая тема" : "Тёмная тема");
     }
 
     void showSnapshot(TicketsController.Snapshot snapshot) {
         if (snapshot.ready()) {
             selection.setCatalog(snapshot.catalog().groups());
             banner.clear();
-            subtitle.setText(Russian.count(snapshot.catalog().groups().size(), "группа", "группы", "групп") + ", "
+            subtitle.setText(Russian.count(snapshot.catalog().groups().size(), "группа", "группы", "групп") + "  ·  "
                     + Russian.count(snapshot.catalog().tickets().size(), "билет", "билета", "билетов"));
         } else {
             selection.setCatalog(Map.of());
@@ -74,11 +87,11 @@ final class MainView extends JPanel {
 
         journal.setRecords(snapshot.history());
         if (!snapshot.ready()) {
-            setStatus("Исправьте входные файлы и нажмите «Повторить загрузку».");
+            setStatus("Исправьте входные файлы и нажмите «Повторить загрузку».", StatusBar.Tone.ERROR);
         } else if (snapshot.historyError() != null) {
-            setStatus("Журнал не прочитан: " + snapshot.historyError());
+            setStatus("Журнал не прочитан: " + snapshot.historyError(), StatusBar.Tone.WARNING);
         } else {
-            setStatus("Данные загружены, можно выдавать билеты.");
+            setStatus("Данные загружены, можно выдавать билеты.", StatusBar.Tone.OK);
         }
     }
 
@@ -86,8 +99,8 @@ final class MainView extends JPanel {
         journal.add(record);
     }
 
-    void setStatus(String text) {
-        status.setText(text);
+    void setStatus(String text, StatusBar.Tone tone) {
+        status.show(text, tone);
     }
 
     private JComponent header() {
@@ -95,52 +108,53 @@ final class MainView extends JPanel {
         title.putClientProperty(FlatClientProperties.STYLE_CLASS, "h2");
         subtitle.putClientProperty(FlatClientProperties.STYLE_CLASS, "muted");
 
-        JPanel titles = new JPanel(new GridLayout(2, 1, 0, 2));
+        JPanel titles = new JPanel(new GridLayout(2, 1, 0, 0));
         titles.setOpaque(false);
         titles.add(title);
         titles.add(subtitle);
 
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+        JPanel brand = new JPanel(new BorderLayout(14, 0));
+        brand.setOpaque(false);
+        brand.add(new BrandMark(), BorderLayout.WEST);
+        brand.add(titles, BorderLayout.CENTER);
+
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         actions.setOpaque(false);
         actions.add(warningsButton);
         actions.add(refreshButton);
         actions.add(themeButton);
+        JPanel actionsHolder = new JPanel(new GridBagLayout());
+        actionsHolder.setOpaque(false);
+        actionsHolder.add(actions);
 
-        JPanel header = new EdgePanel(false);
-        header.setBorder(BorderFactory.createEmptyBorder(16, 24, 14, 16));
-        header.add(titles, BorderLayout.WEST);
-        header.add(actions, BorderLayout.EAST);
+        JPanel header = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                g.setColor(Theme.color("line"));
+                g.drawLine(0, getHeight() - 1, getWidth(), getHeight() - 1);
+            }
+        };
+        header.setBorder(BorderFactory.createEmptyBorder(14, 24, 14, 18));
+        header.add(brand, BorderLayout.WEST);
+        header.add(actionsHolder, BorderLayout.EAST);
         return header;
     }
 
-    private JComponent statusBar() {
-        JPanel bar = new EdgePanel(true);
-        bar.setBorder(BorderFactory.createEmptyBorder(7, 24, 7, 24));
-        bar.add(status, BorderLayout.WEST);
-        return bar;
-    }
+    /** Фирменный знак слева от заголовка. */
+    private static final class BrandMark extends JComponent {
+        private static final int SIZE = 42;
 
-    private static JButton toolButton() {
-        JButton button = new JButton();
-        button.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
-        return button;
-    }
-
-    /** Панель с тонкой линией сверху (строка состояния) или снизу (шапка). */
-    private static final class EdgePanel extends JPanel {
-        private final boolean lineOnTop;
-
-        EdgePanel(boolean lineOnTop) {
-            super(new BorderLayout());
-            this.lineOnTop = lineOnTop;
+        BrandMark() {
+            setPreferredSize(new Dimension(SIZE, SIZE));
         }
 
         @Override
         protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            g.setColor(Theme.color("line"));
-            int y = lineOnTop ? 0 : getHeight() - 1;
-            g.drawLine(0, y, getWidth(), y);
+            Graphics2D g2 = Theme.smooth(g);
+            int y = (getHeight() - SIZE) / 2;
+            Icons.paintBrand(g2, 0, y, SIZE, Theme.color("primary"), Theme.color("onPrimary"));
+            g2.dispose();
         }
     }
 }

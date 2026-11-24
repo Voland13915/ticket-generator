@@ -7,6 +7,8 @@ import tickets.model.Student;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Area;
+import java.awt.geom.Line2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.RoundRectangle2D;
 import java.time.format.DateTimeFormatter;
@@ -21,6 +23,8 @@ final class TicketView extends JPanel {
     private static final int ARC = 20;
     private static final int NOTCH = 11;
     private static final int TEXT_WIDTH = 400;
+    /** Поле вокруг бумаги под мягкую тень. */
+    private static final int SHADOW = 10;
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     private final boolean repeat;
@@ -28,6 +32,7 @@ final class TicketView extends JPanel {
     TicketView(Student student, Assignment assignment) {
         super(new BorderLayout());
         setOpaque(false);
+        setBorder(BorderFactory.createEmptyBorder(SHADOW - 4, SHADOW, SHADOW + 4, SHADOW));
         this.repeat = assignment.record().repeat();
         add(main(student, assignment), BorderLayout.CENTER);
         add(stub(assignment), BorderLayout.EAST);
@@ -83,14 +88,14 @@ final class TicketView extends JPanel {
         panel.setOpaque(false);
         panel.setPreferredSize(new Dimension(STUB_WIDTH, 10));
 
-        JLabel caption = new JLabel("билет");
-        caption.putClientProperty(FlatClientProperties.STYLE_CLASS, "muted");
+        JLabel caption = new JLabel("БИЛЕТ");
+        caption.putClientProperty(FlatClientProperties.STYLE_CLASS, new String[]{"small", "onPrimaryMuted"});
         JLabel number = new JLabel(String.valueOf(assignment.ticket().number()));
         number.setFont(Theme.serif(Font.BOLD, 64f));
-        number.putClientProperty(FlatClientProperties.STYLE_CLASS, "ink");
+        number.putClientProperty(FlatClientProperties.STYLE_CLASS, "onPrimary");
         JLabel date = new JLabel(assignment.record().dateTime() == null ? " "
                 : assignment.record().dateTime().format(DATE));
-        date.putClientProperty(FlatClientProperties.STYLE_CLASS, new String[]{"small", "muted"});
+        date.putClientProperty(FlatClientProperties.STYLE_CLASS, new String[]{"small", "onPrimaryMuted"});
 
         GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0;
@@ -100,25 +105,56 @@ final class TicketView extends JPanel {
         return panel;
     }
 
-    /** Бумага с вырезами по линии отрыва и пунктир перфорации. */
+    /** Тень, бумага с вырезами по линии отрыва, цветной корешок и пунктир перфорации. */
     @Override
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = Theme.smooth(g);
-        int w = getWidth();
-        int h = getHeight();
-        int x = w - STUB_WIDTH;
+        Insets in = getInsets();
+        float left = in.left + 0.5f;
+        float top = in.top + 0.5f;
+        float w = getWidth() - in.left - in.right - 1f;
+        float h = getHeight() - in.top - in.bottom - 1f;
+        float x = left + w - STUB_WIDTH;
 
-        Area paper = new Area(new RoundRectangle2D.Float(0.5f, 0.5f, w - 1f, h - 1f, ARC, ARC));
-        paper.subtract(new Area(new Ellipse2D.Float(x - NOTCH, -NOTCH, 2 * NOTCH, 2 * NOTCH)));
-        paper.subtract(new Area(new Ellipse2D.Float(x - NOTCH, h - NOTCH, 2 * NOTCH, 2 * NOTCH)));
+        Area notches = new Area(new Ellipse2D.Float(x - NOTCH, top - NOTCH, 2 * NOTCH, 2 * NOTCH));
+        notches.add(new Area(new Ellipse2D.Float(x - NOTCH, top + h - NOTCH, 2 * NOTCH, 2 * NOTCH)));
+
+        // тень не должна просвечивать сквозь вырезы
+        Area outsideNotches = new Area(new Rectangle2D.Float(0, 0, getWidth(), getHeight()));
+        outsideNotches.subtract(notches);
+        Graphics2D shadow = (Graphics2D) g2.create();
+        shadow.clip(outsideNotches);
+        paintShadow(shadow, left, top, w, h);
+        shadow.dispose();
+
+        Area paper = new Area(new RoundRectangle2D.Float(left, top, w, h, ARC, ARC));
+        paper.subtract(notches);
         g2.setColor(Theme.color("paper"));
         g2.fill(paper);
+
+        Area stub = new Area(paper);
+        stub.intersect(new Area(new Rectangle2D.Float(x, top, STUB_WIDTH + 1, h + 1)));
+        g2.setColor(Theme.color("primary"));
+        g2.fill(stub);
+
         g2.setColor(Theme.color("line"));
         g2.draw(paper);
 
+        g2.setColor(Theme.color("onPrimaryMuted"));
         g2.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1f, new float[]{1f, 6f}, 0f));
-        g2.drawLine(x, NOTCH + 8, x, h - NOTCH - 8);
+        g2.draw(new Line2D.Float(x + 1, top + NOTCH + 8, x + 1, top + h - NOTCH - 8));
         g2.dispose();
+    }
+
+    /** Мягкая тень: несколько полупрозрачных слоёв, смещённых вниз. */
+    private static void paintShadow(Graphics2D g2, float left, float top, float w, float h) {
+        Color base = Theme.color("shadow");
+        int layers = SHADOW - 2;
+        for (int i = layers; i > 0; i--) {
+            int alpha = Math.max(1, (int) (Theme.isDark() ? 30f / i : 14f / i));
+            g2.setColor(new Color(base.getRed(), base.getGreen(), base.getBlue(), alpha));
+            g2.fill(new RoundRectangle2D.Float(left - i, top - i + 4, w + 2 * i, h + 2 * i, ARC + 2 * i, ARC + 2 * i));
+        }
     }
 
     @Override
@@ -140,8 +176,8 @@ final class TicketView extends JPanel {
         FontMetrics fmSmall = g2.getFontMetrics(small);
         int bw = Math.max(fmBig.stringWidth(top), fmSmall.stringWidth(bottom)) + 30;
         int bh = fmBig.getHeight() + fmSmall.getHeight() + 14;
-        int cx = getWidth() - STUB_WIDTH - 26 - bw / 2;
-        int cy = 30 + bh / 2;
+        int cx = getWidth() - getInsets().right - STUB_WIDTH - 26 - bw / 2;
+        int cy = getInsets().top + 30 + bh / 2;
 
         Color base = Theme.color("stamp");
         g2.setColor(new Color(base.getRed(), base.getGreen(), base.getBlue(), 210));
